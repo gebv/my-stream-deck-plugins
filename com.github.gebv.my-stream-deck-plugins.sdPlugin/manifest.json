@@ -1,0 +1,58 @@
+{
+  "Actions": [
+    {
+      "Icon": "images/action_test",
+      "Name": "Test Action 1",
+      "States": [
+        {
+          "Image": "images/action_test",
+          "TitleAlignment": "middle",
+          "FontSize": "17"
+        }
+      ],
+      "SupportedInMultiActions": false,
+      "Tooltip": "My Strem Deck Plugins",
+      "UUID": "com.github.gebv.my-stream-deck-plugins.dosomething1",
+      "PropertyInspectorPath": "pi.html"
+    },
+    {
+      "Icon": "images/action_test",
+      "Name": "On \\Off",
+      "States": [
+        {
+          "Image": "images/action_test",
+		      "Name": "On"
+        },
+        {
+          "Image": "images/action_test",
+		      "Name": "Off"
+        }
+      ],
+      "UUID": "com.github.gebv.my-stream-deck-plugins.toggle-on-off",
+      "PropertyInspectorPath": "pi.html"
+    }
+  ],
+
+  "Author": "gebv",
+  "CodePathMac": "my-sd-plugins-backend.darwin-arm64.bin",
+
+  "Icon": "images/category_icon",
+  "Category": "My Strem Deck Plugins",
+  "CategoryIcon": "images/category_icon",
+
+  "Description": "Plugins (unofficial) for the Elgato Stream Deck for every day that can be used for all occasions.",
+
+  "Name": "My Strem Deck Plugins",
+  "URL": "https://github.com/gebv/my-stream-deck-plugins",
+  "Version": "0.0.23",
+  "OS": [
+    {
+        "Platform": "mac",
+        "MinimumVersion" : "10.11"
+    }
+  ],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "5.0"
+  }
+}

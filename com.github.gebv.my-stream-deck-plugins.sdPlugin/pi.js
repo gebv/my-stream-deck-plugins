@@ -8,8 +8,7 @@ var actionState = {
 
 var debugInfo = {
     view: function (vnode) {
-        return m("details", { class: "message" }, [
-            m("summary", "Debug info"),
+        return m("div", [
             m("p", "Plugin settings:" + JSON.stringify(actionState.settings)),
             m("p", "Plugin globalSettings:" + JSON.stringify(actionState.globalSettings)),
         ])
@@ -42,9 +41,49 @@ var testAction = {
     }
 }
 
+var memInfoAction = {
+    selectedSkin: "",
+    oninit: function(vnode) {
+        memInfoAction.selectedSkin = actionState.settings.selectedSkin || "used_percent"
+    },
+    availableSkins: [
+        {name: "Total", id: "total"},
+        {name: "Free", id: "free"},
+        {name: "Used Percent", id: "used_percent"},
+    ],
+    view: function() {
+        return m("div", [
+            m("h3", "Mem Info Settings"),
+            // <div class="sdpi-item">
+            m("div", {class: "sdpi-item"}, [
+                // <div class="sdpi-item-label">Select</div>
+                m("div", {class: "sdpi-item-label"}, "Skin"),
+                // <select class="sdpi-item-value select"
+                m("select", {
+                    class: "sdpi-item-value select",
+                    value: memInfoAction.selectedSkin,
+                    onchange: e => {
+                        memInfoAction.selectedSkin = e.target.value
+                        actionState.settings.selectedSkin = e.target.value
+                        console.log("selected skin", e.target)
+
+                        $PI.setSettings(actionState.settings)
+                    }},
+                    memInfoAction.availableSkins.map(e => m("option", {value: e.id}, e.name))
+                )
+            ]),
+            m("div", {class: "sdpi-item"}, [
+                m("div.sdpi-item-label", "Debug Info"),
+                m(debugInfo),
+            ])
+        ])
+    }
+}
+
 var actionUI = {
     "com.github.gebv.my-stream-deck-plugins.toggle-on-off":  onOffAction,
-    "com.github.gebv.my-stream-deck-plugins.dosomething1":  testAction
+    "com.github.gebv.my-stream-deck-plugins.dosomething1":  testAction,
+    "com.github.gebv.my-stream-deck-plugins.mem-info":  memInfoAction,
 }
 
 // var itemExample = {
@@ -70,13 +109,13 @@ function initUI() {
     console.log("mithril", m)
     if (!actionUI.hasOwnProperty(actionState.name)) {
         m.mount(
-            document.body,
+            document.getElementById("app"),
             m("p", 'no registered Properoty Inspector for ' +actionState.name+ ' action'),
         )
         return
     }
     m.mount(
-        document.body,
+        document.getElementById("app"),
         actionUI[actionState.name],
     )
 }

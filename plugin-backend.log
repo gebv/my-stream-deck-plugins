@@ -1,0 +1,5 @@
+2023/02/04 22:23:32 2023-02-04T22:23:32.269229+03:00
+2023/02/04 22:23:32 input args [/var/folders/nf/y7ky0nnd35q26x1z4_wx5zmr0000gn/T/go-build2442813738/b001/exe/main]
+2023/02/04 22:23:32 plugin UUID 
+2023/02/04 22:23:32 Open failed: dial tcp [::1]:0: connect: can't assign requested address
+2023/02/04 22:23:32 dial tcp [::1]:0: connect: can't assign requested address

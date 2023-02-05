@@ -30,6 +30,13 @@ func main() {
 	log.SetOutput(f)
 	log.Println(time.Now().Format(time.RFC3339Nano))
 
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Println("Recover panic:\n", rec)
+			return
+		}
+	}()
+
 	// Initialize handlers for events
 	sdk.RegisterAction("com.github.gebv.my-stream-deck-plugins.dosomething1", doSomethingHandler)
 	sdk.RegisterAction("com.github.gebv.my-stream-deck-plugins.toggle-on-off", doSomethingHandler)
@@ -38,34 +45,32 @@ func main() {
 	sdk.AddHandler(func(e *sdk.WillAppearEvent) {
 		log.Println("Active element:", e.Action, e.Context, e.Payload)
 		registredActionsMux.Lock()
-		registredActions = append(registredActions, action{
-			context:  e.Context,
-			action:   e.Action,
-			settings: e.Payload.Get("settings"),
-		})
+		registredActions[e.Context] = action{
+			context:      e.Context,
+			action:       e.Action,
+			selectedSkin: string(e.Payload.Get("settings").GetStringBytes("selectedSkin")),
+		}
 		registredActionsMux.Unlock()
 	})
 	sdk.AddHandler(func(e *sdk.ReceiveSettingsEvent) {
 		log.Println("Got Settings:", e.Action, e.Context, e.Settings)
 		registredActionsMux.Lock()
-		foundIdx := -1
-		for idx := range registredActions {
-			if registredActions[idx].action == e.Action &&
-				registredActions[idx].context == e.Context {
-				foundIdx = idx
-				break
-			}
-		}
-		if foundIdx != -1 {
-			registredActions[foundIdx].settings = e.Settings
+		if action, exists := registredActions[e.Context]; exists {
+			action.selectedSkin = string(e.Settings.GetStringBytes("selectedSkin"))
+			registredActions[e.Context] = action
 		}
 		registredActionsMux.Unlock()
+
 	})
 	sdk.AddHandler(func(e *sdk.GlobalSettingsEvent) {
 		log.Println("Got Global Settings:", e.Settings)
 	})
 	sdk.AddHandler(func(e *sdk.WillDisappearEvent) {
 		log.Println("Hide element:", e.Action, e.Context, e.Payload)
+
+		registredActionsMux.Lock()
+		delete(registredActions, e.Context)
+		registredActionsMux.Unlock()
 	})
 	sdk.AddHandler(func(e *sdk.SendToPluginEvent) {
 		log.Println("PI send to Plugin Event", e.Action, e.Payload.String())
@@ -144,27 +149,36 @@ func pool() {
 	for {
 		// sdk.Log("Polling mic state..." + sdk.PluginUUID)
 		log.Println("Pooling")
+		log.Println()
 
 		time.Sleep(time.Second * 1)
 
 		registredActionsMux.RLock()
-		for _, item := range registredActions {
-			log.Println("Registred Action:", item.action)
+		for context := range registredActions {
+			item := registredActions[context]
+
+			log.Printf("Registred Action %q, context %q\n", item.action, item.context)
 			switch item.action {
 			case "com.github.gebv.my-stream-deck-plugins.mem-info":
-				v, _ := mem.VirtualMemory()
-				skin := string(item.settings.GetStringBytes("selectedSkin"))
+				osCPU, _ := cpu.Percent(0, false)
+				memInfo, _ := mem.VirtualMemory()
+				skin := item.selectedSkin
+
 				log.Println("  Skin:", skin)
 
 				switch skin {
-				case "total":
-					sdk.SetTitle(item.context, fmt.Sprintf("total\n%s", humanize.Bytes(v.Total)), 0)
-				case "free":
-					sdk.SetTitle(item.context, fmt.Sprintf("free\n%s", humanize.Bytes(v.Available)), 0)
-				case "used_percent":
-					sdk.SetTitle(item.context, fmt.Sprintf("used\n%d%%", int(v.UsedPercent)), 0)
+				case "cpu_usage_percent":
+					if len(osCPU) > 0 {
+						sdk.SetTitle(item.context, fmt.Sprintf("CPU\n%d%%", int(osCPU[0])), 0)
+					}
+				case "mem_total":
+					sdk.SetTitle(item.context, fmt.Sprintf("MEM\nTotal\n%s", humanize.Bytes(memInfo.Total)), 0)
+				case "mem_free":
+					sdk.SetTitle(item.context, fmt.Sprintf("MEM\nFree\n%s", humanize.Bytes(memInfo.Available)), 0)
+				case "mem_usage_percent":
+					sdk.SetTitle(item.context, fmt.Sprintf("MEM\nUsage\n%d%%", int(memInfo.UsedPercent)), 0)
 				default:
-					sdk.SetTitle(item.context, fmt.Sprintf("used\n%d%%", int(v.UsedPercent)), 0)
+					sdk.SetTitle(item.context, fmt.Sprintf("MEM\nUsage\n%d%%", int(memInfo.UsedPercent)), 0)
 				}
 			}
 		}
@@ -173,12 +187,12 @@ func pool() {
 }
 
 type action struct {
-	context  string
-	action   string
-	settings *fastjson.Value
+	context      string
+	action       string
+	selectedSkin string
 }
 
-var registredActions = []action{}
+var registredActions = map[string]action{}
 var registredActionsMux sync.RWMutex
 
 func info() {

@@ -37,8 +37,8 @@
       "States": [
         {
           "Image": "images/action_mem_info",
-          "TitleAlignment": "bottom",
-          "FontSize": "14"
+          "TitleAlignment": "middle",
+          "FontSize": "17"
         }
       ],
       "UUID": "com.github.gebv.my-stream-deck-plugins.mem-info",
@@ -57,7 +57,7 @@
 
   "Name": "My Strem Deck Plugins",
   "URL": "https://github.com/gebv/my-stream-deck-plugins",
-  "Version": "0.0.44",
+  "Version": "0.0.56",
   "OS": [
     {
         "Platform": "mac",

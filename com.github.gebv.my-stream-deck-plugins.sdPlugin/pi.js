@@ -1,4 +1,5 @@
 var actionState = {
+    context: "n/a",
     name: "n/a",
     settings: {},
     globalSettings: {},
@@ -9,6 +10,7 @@ var actionState = {
 var debugInfo = {
     view: function (vnode) {
         return m("div", [
+            m("p", "Context ID:" + actionState.context),
             m("p", "Plugin settings:" + JSON.stringify(actionState.settings)),
             m("p", "Plugin globalSettings:" + JSON.stringify(actionState.globalSettings)),
         ])
@@ -44,12 +46,13 @@ var testAction = {
 var memInfoAction = {
     selectedSkin: "",
     oninit: function(vnode) {
-        memInfoAction.selectedSkin = actionState.settings.selectedSkin || "used_percent"
+        memInfoAction.selectedSkin = actionState.settings.selectedSkin || "cpu_usage_percent"
     },
     availableSkins: [
-        {name: "Total", id: "total"},
-        {name: "Free", id: "free"},
-        {name: "Used Percent", id: "used_percent"},
+        {name: "CPU Usage Percent", id: "cpu_usage_percent"},
+        {name: "Memory Usage Percent", id: "mem_usage_percent"},
+        {name: "Memory Total", id: "mem_total"},
+        {name: "Memory Free", id: "mem_free"},
     ],
     view: function() {
         return m("div", [
@@ -136,6 +139,7 @@ $PI.onConnected(e => {
 
     const { actionInfo, appInfo, connection, messageType, port, uuid } = e;
     const { action, payload, context } = actionInfo;
+    actionState.context = context
     const { settings } = payload;
     actionState.name = action
     actionState.settings = settings

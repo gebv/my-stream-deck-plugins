@@ -30,6 +30,19 @@
       ],
       "UUID": "com.github.gebv.my-stream-deck-plugins.toggle-on-off",
       "PropertyInspectorPath": "pi.html"
+    },
+    {
+      "Icon": "images/action_mem_info",
+      "Name": "Mem Info",
+      "States": [
+        {
+          "Image": "images/action_mem_info",
+          "TitleAlignment": "middle",
+          "FontSize": "17"
+        }
+      ],
+      "UUID": "com.github.gebv.my-stream-deck-plugins.mem-info",
+      "PropertyInspectorPath": "pi.html"
     }
   ],
 
@@ -44,7 +57,7 @@
 
   "Name": "My Strem Deck Plugins",
   "URL": "https://github.com/gebv/my-stream-deck-plugins",
-  "Version": "0.0.23",
+  "Version": "0.0.56",
   "OS": [
     {
         "Platform": "mac",

@@ -50,6 +50,8 @@ var memInfoAction = {
     },
     availableSkins: [
         {name: "CPU Usage Percent", id: "cpu_usage_percent"},
+        {name: "CPU Usage Percent (High-Performance Cores)", id: "cpu_usage_percent_hpc"},
+        {name: "CPU Usage Percent (High-Efficiency Cores)", id: "cpu_usage_percent_hec"},
         {name: "Memory Usage Percent", id: "mem_usage_percent"},
         {name: "Memory Total", id: "mem_total"},
         {name: "Memory Free", id: "mem_free"},

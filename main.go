@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -146,12 +147,22 @@ func drawPng(context string, img image.Image) {
 }
 
 func pool() {
+	cpuInfo, err := cpu.Info()
+	if err != nil {
+		log.Printf("Failed get CPU info: %v\n", err)
+	}
+	isM1Max := false
+	if len(cpuInfo) > 0 && cpuInfo[0].ModelName == "Apple M1 Max" {
+		// TODO: for each type of processor a different calculation
+		isM1Max = true
+	}
 	for {
 		// sdk.Log("Polling mic state..." + sdk.PluginUUID)
 		log.Println("Pooling")
 		log.Println()
 
-		time.Sleep(time.Second * 1)
+		// time.Sleep(time.Second * 1)
+		sleepDuration := time.Second * 2
 
 		registredActionsMux.RLock()
 		for context := range registredActions {
@@ -160,17 +171,28 @@ func pool() {
 			log.Printf("Registred Action %q, context %q\n", item.action, item.context)
 			switch item.action {
 			case "com.github.gebv.my-stream-deck-plugins.mem-info":
-				osCPU, _ := cpu.Percent(0, false)
 				memInfo, _ := mem.VirtualMemory()
 				skin := item.selectedSkin
+
+				var cpuAvgHec, cpuAvgHpc float64
+				var cpuAvg float64
+				if runtime.GOARCH == "arm64" && runtime.GOOS == "darwin" && isM1Max {
+					res, _ := cpu.Percent(sleepDuration, true)
+					cpuAvgHec, cpuAvgHpc = coreAverages(res, 2, 8)
+				} else {
+					res, _ := cpu.Percent(sleepDuration, false)
+					cpuAvg = res[0]
+				}
 
 				log.Println("  Skin:", skin)
 
 				switch skin {
 				case "cpu_usage_percent":
-					if len(osCPU) > 0 {
-						sdk.SetTitle(item.context, fmt.Sprintf("CPU\n%d%%", int(osCPU[0])), 0)
-					}
+					sdk.SetTitle(item.context, fmt.Sprintf("CPU\n%d%%", int(cpuAvg)), 0)
+				case "cpu_usage_percent_hpc":
+					sdk.SetTitle(item.context, fmt.Sprintf("CPU\n%d%%", int(cpuAvgHpc)), 0)
+				case "cpu_usage_percent_hec":
+					sdk.SetTitle(item.context, fmt.Sprintf("CPU\n%d%%", int(cpuAvgHec)), 0)
 				case "mem_total":
 					sdk.SetTitle(item.context, fmt.Sprintf("MEM\nTotal\n%s", humanize.Bytes(memInfo.Total)), 0)
 				case "mem_free":
@@ -184,6 +206,22 @@ func pool() {
 		}
 		registredActionsMux.RUnlock()
 	}
+}
+
+func coreAverages(arr []float64, hec int, hpc int) (float64, float64) {
+	hecAvg := average(arr, 0, hec)
+	hpcAvg := average(arr, hec, hec+hpc)
+	return hecAvg, hpcAvg
+}
+
+func average(arr []float64, start int, end int) float64 {
+	sum := 0.0
+	count := 0
+	for i := start; i < end && i < len(arr); i++ {
+		sum += arr[i]
+		count++
+	}
+	return sum / float64(count)
 }
 
 type action struct {
